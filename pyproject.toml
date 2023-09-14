@@ -1,0 +1,13 @@
+[project]
+name = "smizip"
+version = "1.0"
+description = "An implementation of Roger Sayle's SmiZip algorithm for compressing short strings"
+readme = "README.rst"
+dependencies = [
+  "pyahocorasick>=1.4.4"
+]
+
+[project.scripts]
+find_best_ngrams = "smizip.scripts.find_best_ngrams:main"
+smizip = "smizip.scripts.compress:main"
+add_char_to_ngrams = "smizip.scripts.add_char_to_ngrams:main"
