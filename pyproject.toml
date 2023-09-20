@@ -6,8 +6,14 @@ readme = "README.rst"
 dependencies = [
   "pyahocorasick>=1.4.4"
 ]
+license = { file = "LICENSE" }
+keywords = [ "chemistry", "cheminformatics", "SMILES", "compression", "zip" ]
+
+[project.urls]
+Homepage = "https://github.com/SoseiHeptares/smizip"
 
 [project.scripts]
 find_best_ngrams = "smizip.scripts.find_best_ngrams:main"
 smizip = "smizip.scripts.compress:main"
 add_char_to_ngrams = "smizip.scripts.add_char_to_ngrams:main"
+
