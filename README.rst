@@ -16,14 +16,14 @@ Install as follows::
    pip install smizip
 
 Let's compress and decompress a .smi file that contains canonical SMILES from RDKit
-using n-grams trained for this purpose listed in `rdkit.slow.json` (available from
+using n-grams trained for this purpose listed in ``rdkit.slow.json`` (available from
 the GitHub site)::
 
   smizip    -i test.smi  -o test.smiz  -n example-ngrams/rdkit.slow.json
   smizip -d -i test.smiz -o test.2.smi -n example-ngrams/rdkit.slow.json
 
-To create your own JSON file of n-grams, you can train on a dataset (`find_best_ngrams.py`),
-or modify an existing JSON (`add_char_to_json.py`).
+To create your own JSON file of n-grams, you can train on a dataset (``find_best_ngrams``),
+or modify an existing JSON (``add_char_to_json``).
 
 To use from Python::
 
@@ -41,6 +41,6 @@ To use from Python::
 Note
 ----
 
-You should include `\n` (carraige-return) as a single-character n-gram if you intend to store the zipped representation in a file with lines terminated by "\n". Otherwise, the byte value of "\n" will be assigned to a multi-gram, and zipped SMILES will be generated containing "\n".
+You should include ``\n`` (carraige-return) as a single-character n-gram if you intend to store the zipped representation in a file with lines terminated by ``\n``. Otherwise, the byte value of ``\n`` will be assigned to a multi-gram, and zipped SMILES will be generated containing ``\n``.
 
 A similar warning goes for any SMILES termination character in a file. If you expect to store zipped SMILES that terminate in a TAB or SPACE character, you should add these characters as single-character n-grams. Otherwise the zipped representation may contain these and you won't know which TABs are terminations and which are part of the representation.
