@@ -1,6 +1,6 @@
 [project]
 name = "smizip"
-version = "1.0"
+version = "1.0.1"
 description = "An implementation of Roger Sayle's SmiZip algorithm for compressing short strings"
 readme = "README.rst"
 dependencies = [
