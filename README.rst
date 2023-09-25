@@ -24,6 +24,11 @@ the GitHub site)::
   smizip    -i test.smi  -o test.smiz  -n smizip/examples/rdkit.slow.json
   smizip -d -i test.smiz -o test.2.smi -n smizip/examples/rdkit.slow.json
 
+Similarly, you can use pre-built example n-grams like in::
+
+  smizip    -i test.smi  -o test.smiz  -n rdkit.slow
+  smizip -d -i test.smiz -o test.2.smi -n rdkit.slow
+
 To create your own JSON file of n-grams, you can train on a dataset (``find_best_ngrams``),
 or modify an existing JSON (``add_char_to_json``).
 

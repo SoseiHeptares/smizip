@@ -7,6 +7,11 @@ import unittest
 class TestZip(unittest.TestCase):
     """Test zipping."""
 
+    def test_fail_load(self):
+        """Test a round trip."""
+        with self.assertRaises(ValueError):
+            SmiZip.load("nope")
+
     def test_zip(self):
         """Test a round trip."""
         zipper = SmiZip.load("rdkit.slow")

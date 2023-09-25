@@ -1,10 +1,16 @@
 import json
 from pathlib import Path
-from typing import List
+from typing import List, Mapping
 import collections
 import ahocorasick
 
 HERE = Path(__file__).parent.resolve()
+EXAMPLES = HERE.joinpath("examples")
+
+
+def get_examples() -> Mapping[str, Path]:
+    """Get example n-gram files."""
+    return {path.stem: path for path in EXAMPLES.glob("*.json")}
 
 
 class SmiZip():
@@ -37,7 +43,10 @@ class SmiZip():
             or ``rdkit.slow``.
         :returns: A SmiZip instance
         """
-        path = HERE.joinpath("examples", f"{name}.json")
+        examples = get_examples()
+        path = examples.get(name)
+        if path is None:
+            raise ValueError(f"Example not found: {name}. Try one of {sorted(examples)}")
         data = json.loads(path.read_text())
         return cls(data["ngrams"])
 
