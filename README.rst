@@ -38,6 +38,14 @@ To use from Python::
   zipped = zipper.zip("c1ccccc1C(=O)Cl") # gives bytes
   unzipped = zipper.unzip(zipped)
 
+Pre-built examples can be used with ``SmiZip.load`` like in::
+
+  from smizip import SmiZip
+
+  zipper = SmiZip.load("rdkit.slow")
+  zipped = zipper.zip("c1ccccc1C(=O)Cl") # gives bytes
+  unzipped = zipper.unzip(zipped)
+
 Note
 ----
 
