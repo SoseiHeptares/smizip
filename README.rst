@@ -19,8 +19,10 @@ Let's compress and decompress a .smi file that contains canonical SMILES from RD
 using n-grams trained for this purpose listed in ``rdkit.slow.json`` (available from
 the GitHub site)::
 
-  smizip    -i test.smi  -o test.smiz  -n example-ngrams/rdkit.slow.json
-  smizip -d -i test.smiz -o test.2.smi -n example-ngrams/rdkit.slow.json
+  git clone https://github.com/SoseiHeptares/smizip
+  cd smizip
+  smizip    -i test.smi  -o test.smiz  -n smizip/examples/rdkit.slow.json
+  smizip -d -i test.smiz -o test.2.smi -n smizip/examples/rdkit.slow.json
 
 To create your own JSON file of n-grams, you can train on a dataset (``find_best_ngrams``),
 or modify an existing JSON (``add_char_to_json``).
