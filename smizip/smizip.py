@@ -1,8 +1,11 @@
-import sys
-import time
+import json
+from pathlib import Path
 from typing import List
 import collections
 import ahocorasick
+
+HERE = Path(__file__).parent.resolve()
+
 
 class SmiZip():
     def __init__(self, multigrams: List[str]) -> None:
@@ -24,6 +27,19 @@ class SmiZip():
                 self.multichars.append(multigram)
 
         self.auto = None
+
+    @classmethod
+    def load(cls, name: str) -> "SmiZip":
+        """Load pre-configured n-grams.
+
+        :param name: The name of the file (without the .json extension) such
+            as ``combined.slow``, ``ob.slow``, ``oe.rnum.slow``, ``oe.slow``,
+            or ``rdkit.slow``.
+        :returns: A SmiZip instance
+        """
+        path = HERE.joinpath("examples", f"{name}.json")
+        data = json.loads(path.read_text())
+        return cls(data["ngrams"])
 
     def unzip(self, text: str):
         ans = []
