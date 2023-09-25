@@ -38,7 +38,7 @@ To use from Python::
   zipped = zipper.zip("c1ccccc1C(=O)Cl") # gives bytes
   unzipped = zipper.unzip(zipped)
 
-Pre-built examples can be used with ``SmiZip.load`` like in::
+Pre-built example n-grams JSON files can be used with ``SmiZip.load`` like in::
 
   from smizip import SmiZip
 
