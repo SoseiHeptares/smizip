@@ -1,12 +1,8 @@
 import sys
 import time
-import json
 import argparse
-import os
 
-import requests
-
-from smizip import SmiZip, get_examples
+from smizip import SmiZip
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Compress or decompress a SMILES file")
@@ -40,25 +36,11 @@ def compress(args, zipper):
 
 def main():
     args = parse_args()
-    examples = get_examples()
-    if args.ngrams in examples:
-        path = examples[args.ngrams]
-        ngrams = json.loads(path.read_text())
-    elif args.ngrams.startswith("http://") or args.ngrams.startswith("https://"):
-        res = requests.get(args.ngrams)
-        ngrams = res.json()["ngrams"]
-    elif os.path.exists(args.ngrams):
-        with open(args.ngrams) as inp:
-            ngrams = json.load(inp)['ngrams']
-    else:
-        raise FileNotFoundError(f"could not decide how to load ngrams from input: {args.ngrams}")
 
+    zipper = SmiZip.load(args.ngrams)
     for x in "\t\n":
-        if x not in ngrams:
+        if x not in zipper.multigrams:
             sys.exit(f"ERROR: This script requires {repr(x)} to be included in the list of n-grams")
-
-    zipper = SmiZip(ngrams)
-
 
     t = time.time()
     if args.decompress:

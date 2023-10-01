@@ -1,6 +1,7 @@
 import json
+import os
 from pathlib import Path
-from typing import List, Mapping
+from typing import List, Mapping, Union
 import collections
 import ahocorasick
 
@@ -35,20 +36,43 @@ class SmiZip():
         self.auto = None
 
     @classmethod
-    def load(cls, name: str) -> "SmiZip":
+    def from_path(cls, path: Union[str, Path]) -> "SmiZip":
+        """Load n-grams from a path.
+
+        :param path: The path to a multigrams JSON file that contains the key
+            ``ngrams``.
+        :returns: A SmiZip instance
+        """
+        data = json.loads(path.read_text())
+        return cls(data["ngrams"])
+
+    @classmethod
+    def load(cls, arg: str) -> "SmiZip":
         """Load pre-configured n-grams.
 
-        :param name: The name of the file (without the .json extension) such
-            as ``combined.slow``, ``ob.slow``, ``oe.rnum.slow``, ``oe.slow``,
-            or ``rdkit.slow``.
+        :param arg: One of the following:
+
+            1. The name of a builtin n-gram example such
+               as ``combined.slow``, ``ob.slow``, ``oe.rnum.slow``, ``oe.slow``,
+               or ``rdkit.slow``.
+            2. The URL to an n-gram JSON file
+            3. The local file path of an n-gram JSON file
         :returns: A SmiZip instance
         """
         examples = get_examples()
-        path = examples.get(name)
-        if path is None:
-            raise ValueError(f"Example not found: {name}. Try one of {sorted(examples)}")
-        data = json.loads(path.read_text())
-        return cls(data["ngrams"])
+        if arg in examples:
+            return cls.from_path(examples[arg])
+        elif isinstance(arg, str) and (arg.startswith("http://") or arg.startswith("https://")):
+            import requests
+
+            res = requests.get(arg)
+            res_json = res.json()
+            multigrams = res_json["ngrams"]
+            return cls(multigrams)
+        elif os.path.exists(arg):
+            return cls.from_path(arg)
+        else:
+            raise ValueError(f"could not decide how to load ngrams from input: {arg}")
 
     def unzip(self, text: str):
         ans = []
