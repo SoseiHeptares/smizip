@@ -1,6 +1,5 @@
 import sys
 import time
-import json
 import argparse
 
 from smizip import SmiZip
@@ -9,7 +8,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Compress or decompress a SMILES file")
     parser.add_argument("-i", "--input", help="Input file", required=True)
     parser.add_argument("-o", "--output", help="Output file (default is stdout)")
-    parser.add_argument("-n", "--ngrams", help="JSON file containing ngrams", required=True)
+    parser.add_argument("-n", "--ngrams", help="JSON file containing ngrams. Can also be a URL or example JSON name", required=True)
     parser.add_argument("-d", "--decompress", action="store_true", help="Decompress (the default is compress)")
     # parser.add_argument("-j", "--ncpus", help="Number of CPUs (default is 1)")
     # parser.add_argument("--no-preserve-order", action="store_true", help="Do NOT require that line order is preserved. This may enable the conversion to run faster.")
@@ -37,14 +36,11 @@ def compress(args, zipper):
 
 def main():
     args = parse_args()
-    with open(args.ngrams) as inp:
-        ngrams = json.load(inp)['ngrams']
+
+    zipper = SmiZip.load(args.ngrams)
     for x in "\t\n":
-        if x not in ngrams:
+        if x not in zipper.multigrams:
             sys.exit(f"ERROR: This script requires {repr(x)} to be included in the list of n-grams")
-
-    zipper = SmiZip(ngrams)
-
 
     t = time.time()
     if args.decompress:

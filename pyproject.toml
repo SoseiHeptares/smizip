@@ -4,7 +4,8 @@ version = "1.0.1"
 description = "An implementation of Roger Sayle's SmiZip algorithm for compressing short strings"
 readme = "README.rst"
 dependencies = [
-  "pyahocorasick>=1.4.4"
+  "pyahocorasick>=1.4.4",
+  "requests",
 ]
 license = { file = "LICENSE" }
 keywords = [ "chemistry", "cheminformatics", "SMILES", "compression", "zip" ]

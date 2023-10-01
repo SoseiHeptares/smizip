@@ -1,1 +1,1 @@
-from .smizip import SmiZip
+from .smizip import SmiZip, get_examples

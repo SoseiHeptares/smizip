@@ -1,8 +1,18 @@
-import sys
-import time
-from typing import List
+import json
+import os
+from pathlib import Path
+from typing import List, Mapping, Union
 import collections
 import ahocorasick
+
+HERE = Path(__file__).parent.resolve()
+EXAMPLES = HERE.joinpath("examples")
+
+
+def get_examples() -> Mapping[str, Path]:
+    """Get example n-gram files."""
+    return {path.stem: path for path in EXAMPLES.glob("*.json")}
+
 
 class SmiZip():
     def __init__(self, multigrams: List[str]) -> None:
@@ -24,6 +34,45 @@ class SmiZip():
                 self.multichars.append(multigram)
 
         self.auto = None
+
+    @classmethod
+    def from_path(cls, path: Union[str, Path]) -> "SmiZip":
+        """Load n-grams from a path.
+
+        :param path: The path to a multigrams JSON file that contains the key
+            ``ngrams``.
+        :returns: A SmiZip instance
+        """
+        data = json.loads(path.read_text())
+        return cls(data["ngrams"])
+
+    @classmethod
+    def load(cls, arg: str) -> "SmiZip":
+        """Load pre-configured n-grams.
+
+        :param arg: One of the following:
+
+            1. The name of a builtin n-gram example such
+               as ``combined.slow``, ``ob.slow``, ``oe.rnum.slow``, ``oe.slow``,
+               or ``rdkit.slow``.
+            2. The URL to an n-gram JSON file
+            3. The local file path of an n-gram JSON file
+        :returns: A SmiZip instance
+        """
+        examples = get_examples()
+        if arg in examples:
+            return cls.from_path(examples[arg])
+        elif isinstance(arg, str) and (arg.startswith("http://") or arg.startswith("https://")):
+            import requests
+
+            res = requests.get(arg)
+            res_json = res.json()
+            multigrams = res_json["ngrams"]
+            return cls(multigrams)
+        elif os.path.exists(arg):
+            return cls.from_path(arg)
+        else:
+            raise ValueError(f"could not decide how to load ngrams from input: {arg}")
 
     def unzip(self, text: str):
         ans = []

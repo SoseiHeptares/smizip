@@ -19,8 +19,15 @@ Let's compress and decompress a .smi file that contains canonical SMILES from RD
 using n-grams trained for this purpose listed in ``rdkit.slow.json`` (available from
 the GitHub site)::
 
-  smizip    -i test.smi  -o test.smiz  -n example-ngrams/rdkit.slow.json
-  smizip -d -i test.smiz -o test.2.smi -n example-ngrams/rdkit.slow.json
+  git clone https://github.com/SoseiHeptares/smizip
+  cd smizip
+  smizip    -i test.smi  -o test.smiz  -n smizip/examples/rdkit.slow.json
+  smizip -d -i test.smiz -o test.2.smi -n smizip/examples/rdkit.slow.json
+
+Similarly, you can use pre-built example n-grams like in::
+
+  smizip    -i test.smi  -o test.smiz  -n rdkit.slow
+  smizip -d -i test.smiz -o test.2.smi -n rdkit.slow
 
 To create your own JSON file of n-grams, you can train on a dataset (``find_best_ngrams``),
 or modify an existing JSON (``add_char_to_json``).
@@ -32,9 +39,17 @@ To use from Python::
 
   json_file = "rdkit.slow.json"
   with open(json_file) as inp:
-     ngrams = json.load(inp)
+     data = json.load(inp)
 
-  zipper = SmiZip(ngrams)
+  zipper = SmiZip(data["ngrams"])
+  zipped = zipper.zip("c1ccccc1C(=O)Cl") # gives bytes
+  unzipped = zipper.unzip(zipped)
+
+Pre-built example n-grams JSON files can be used with ``SmiZip.load`` like in::
+
+  from smizip import SmiZip
+
+  zipper = SmiZip.load("rdkit.slow")
   zipped = zipper.zip("c1ccccc1C(=O)Cl") # gives bytes
   unzipped = zipper.unzip(zipped)
 
