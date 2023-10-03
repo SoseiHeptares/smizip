@@ -1,12 +1,17 @@
 SmiZip
 ======
 
-SmiZip is a compression method for short strings. It was developed by
-Roger Sayle in 1998 while at Metaphorics LLC to compress SMILES strings.
-
-This repo is an implementation in Python by Noel O'Boyle of the SmiZip algorithm as
-described by Roger in a Mug01 presentation in 2001:
+SmiZip is a compression method for short strings. It was developed in 1998 by
+Roger Sayle (while at Metaphorics LLC) to compress SMILES strings, and
+fully described at a Daylight Mug01 presentation in 2001:
 https://www.daylight.com/meetings/mug01/Sayle/SmiZip/index.htm
+
+This repo is an implementation Noel O'Boyle of the SmiZip algorithm in Python.
+This work was presented at the 12th RDKit UGM in Mainz in Sep 2023:
+https://github.com/SoseiHeptares/presentations/blob/main/2023/2023-09-12thRDKitUGM_NoelOBoyle_SmiZip.pdf
+
+Note that the more recent 'smaz' (https://github.com/antirez/smaz) short string compression algorithm (2009) is equivalent in concept, but
+favours a greedy approach over an optimal encoding.
 
 Quick start
 -----------
@@ -15,17 +20,22 @@ Install as follows::
 
    pip install smizip
 
-Let's compress and decompress a .smi file that contains canonical SMILES from RDKit
-using n-grams trained for this purpose listed in ``rdkit.slow.json`` (available from
-the GitHub site)::
+First, let's download a set of n-grams trained on RDKit canonical SMILES from ChEMBL::
 
-  smizip    -i test.smi  -o test.smiz  -n example-ngrams/rdkit.slow.json
-  smizip -d -i test.smiz -o test.2.smi -n example-ngrams/rdkit.slow.json
+  curl https://raw.githubusercontent.com/SoseiHeptares/smizip/main/example-ngrams/rdkit.slow.json -o rdkit.slow.json
 
-To create your own JSON file of n-grams, you can train on a dataset (``find_best_ngrams``),
-or modify an existing JSON (``add_char_to_json``).
+Now let's use this to compress and decompress a .smi file that contains canonical SMILES from RDKit::
 
-To use from Python::
+  smizip    -i test.smi  -o test.smiz  -n rdkit.slow.json
+  smizip -d -i test.smiz -o test.2.smi -n rdkit.slow.json
+
+Other example sets of n-grams are available from the GitHub site (https://github.com/SoseiHeptares/smizip/tree/main/example-ngrams).
+To create your own JSON file of n-grams, you can train on a dataset (``find_best_ngrams``), or modify
+an existing JSON (``add_char_to_json``).
+
+To use from Python:
+
+.. code-block:: python
 
   import json
   from smizip import SmiZip
