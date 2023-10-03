@@ -32,7 +32,7 @@ To use from Python::
 
   json_file = "rdkit.slow.json"
   with open(json_file) as inp:
-     ngrams = json.load(inp)
+     ngrams = json.load(inp)['ngrams']
 
   zipper = SmiZip(ngrams)
   zipped = zipper.zip("c1ccccc1C(=O)Cl") # gives bytes
