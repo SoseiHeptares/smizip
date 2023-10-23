@@ -64,7 +64,14 @@ class SmiZip():
         multigrams = []
         while i >= 0:
             multigram = chosen[i]
-            multigrams.append(multigram)
+            # multigrams.append(multigram)
+            if multigram not in self.lookup:
+                # Handle the case where multigram is not in the lookup.
+                # You can choose to ignore it, skip it, or handle it as needed.
+                print(f"Warning: Multigram '{multigram}' not found in lookup.")
+                pass
+            else:
+                multigrams.append(multigram)
             i -= len(multigram)
         multigrams.reverse()
         if format == 0:
