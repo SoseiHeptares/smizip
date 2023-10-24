@@ -41,10 +41,10 @@ class Compressor():
         self.auto.make_automaton()
 
     def compress(self, text):
-        solution = [0] # the min number of ngrams for the substring of length idx
+        solution = [0]  # the minimum number of n-grams for the substring of length idx
 
         if self.multichars:
-            matches = list(self.auto.iter(text)) # [(endidx, string), ...]
+            matches = list(self.auto.iter(text))  # [(endidx, string), ...]
         else:
             matches = []
 
@@ -55,18 +55,17 @@ class Compressor():
         chosen_len = []
         N = len(text)
         for i in range(N):
-            all_data = []
-            all_data.append( (solution[i], 1) ) # handle single-char (note: this does not check whether the character appears in the list of supported single-chars)
+            all_data = [(solution[i], 1)]  # handle single-char (note: this does not check whether the character appears in the list of supported single-chars)
             for ngram in matches_by_endidx[i]:
                 ngram_len = len(ngram)
-                data = (solution[i-ngram_len+1], ngram_len)
+                data = (solution[i - ngram_len + 1], ngram_len)
                 all_data.append(data)
             all_data.sort()
             solution.append(all_data[0][0] + 1)
             chosen_len.append(all_data[0][1])
 
         # We have the best length
-        # ...we just need to backtrack to find the ngrams that were chosen
+        # ...we just need to backtrack to find the n-grams that were chosen
         i = len(text) - 1
         num_ngrams = 0
         while i >= 0:
@@ -88,8 +87,8 @@ class NgramManager:
 
     def calculate_ngrams(self, smiles):
         max_size = 60
-        counts = collections.defaultdict(int) # the number of occurences
-        molecule_counts = collections.defaultdict(int) # the number of molecules it occurs in
+        counts = collections.defaultdict(int)  # the number of occurrences
+        molecule_counts = collections.defaultdict(int)  # the number of molecules it occurs in
         for smi in smiles:
             mc = set()
             for start in range(0, len(smi)-2):
@@ -99,7 +98,7 @@ class NgramManager:
                     mc.add(ngram)
             for ngram in mc:
                 molecule_counts[ngram] += 1
-        self.counts = dict((x, y) for (x, y) in counts.items() if molecule_counts[x] > 1) # N grams must occur in at least 2 molecules
+        self.counts = {x: y for x, y in counts.items() if molecule_counts[x] > 1}  # N-grams must occur in at least 2 molecules
 
     def set_value(self, ngram, val):
         self.values[ngram] = (val, True)
@@ -107,47 +106,48 @@ class NgramManager:
     def update_estimates(self, latest, singlechars, multichars):
         """Assign or update value estimates
 
-        An estimated value to assigned to any new ngrams. Ngrams whose value has already
-        been measured are left unchanged. Over time these values will become over
-        optimistic, but this is fine as they will be remeasured.
-        Over-optimistic estimates are more of a problem, as all the sequences of a particular
-        length will suddenly find themselves top of the pile, and crowd out realistic measured
-        values. For this reason, all estimated values are re-estimated if a new token is
-        added to the list that might affect its value.
-        For example, the estimated value of "c1ccccc1" is 7 (8 ngrams converted to 1) but if "cc"
-        is subsequently added to the list of ngrams, then its estimate will be re-evaluated
-        as 5 (6 ngrams converted to 1).
+        An estimated value is assigned to any new n-grams. N-grams whose value has already
+        been measured are left unchanged. Over time, these values will become overly
+        optimistic, but this is fine as they will be remeasured. Over-optimistic estimates
+        are more of a problem, as all the sequences of a particular length will suddenly
+        find themselves on top of the pile and crowd out realistic measured values. For this
+        reason, all estimated values are re-estimated if a new token is added to the list
+        that might affect its value. For example, the estimated value of "c1ccccc1" is 7
+        (8 n-grams converted to 1) but if "cc" is subsequently added to the list of n-grams,
+        then its estimate will be re-evaluated as 5 (6 n-grams converted to 1).
         """
         for ngram in self.counts.keys():
             val, is_measured = self.values.get(ngram, (0, False))
-            if is_measured: continue
+            if is_measured:
+                continue
             if val == 0 or latest in ngram:
                 self.values[ngram] = (length_after_compression([ngram], singlechars, multichars) - 1, False)
 
     def get_ngrams(self, chosen_ngrams: set):
-        """Yield ngrams in order of value"""
+        """Yield n-grams in order of value"""
         tmp = []
         for ngram, count in self.counts.items():
-            if ngram in chosen_ngrams: continue
+            if ngram in chosen_ngrams:
+                continue
             val, is_measured = self.values[ngram]
-            tmp.append( (ngram, val, is_measured, val*count) )
-        tmp.sort(reverse=True, key=lambda x:x[3])
+            tmp.append((ngram, val, is_measured, val * count))
+        tmp.sort(reverse=True, key=lambda x: x[3])
         for t in tmp:
             yield t
 
 DEFAULT_LIST = "*%:#()+-./0123456789=@ABCFHIKLMNOPRSTXZ[\\]abcegilnoprst"
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Find a set of ngrams that maximally compresses a training set")
+    parser = argparse.ArgumentParser(description="Find a set of n-grams that maximally compresses a training set")
     parser.add_argument("-i", "--input", help="Training set file", required=True)
-    parser.add_argument("-o", "--output", help="JSON file into which to save the list of 256 ngrams", required=True)
+    parser.add_argument("-o", "--output", help="JSON file to save the list of 256 n-grams", required=True)
     parser.add_argument("-l", "--log", help="Write the log to a file. Note that it will still be written to stdout.", default=None)
-    parser.add_argument("--chars", help=f"Replace the default list of characters by those in the provided string. The default is {''.join(sorted(DEFAULT_LIST)).replace('%', '%%')}", default=DEFAULT_LIST)
-    parser.add_argument("--multigrams", help=f"Provide a comma-separated list of additional ngrams to include. This is parsed using Python's CSV reader.")
-    parser.add_argument("--zero", action="store_true", help="Include \\0 as an ngram")
-    parser.add_argument("--tab", action="store_true", help="Include TAB as an ngram")
-    parser.add_argument("--space", action="store_true", help="Include SPACE as an ngram")
-    parser.add_argument("--cr", action="store_true", help="Include \\n (carraige-return) as an ngram")
+    parser.add_argument("--chars", help=f"Replace the default list of characters with those in the provided string. The default is {''.join(sorted(DEFAULT_LIST)).replace('%', '%%')}", default=DEFAULT_LIST)
+    parser.add_argument("--multigrams", help="Provide a comma-separated list of additional n-grams to include. This is parsed using Python's CSV reader.")
+    parser.add_argument("--zero", action="store_true", help="Include \\0 as an n-gram")
+    parser.add_argument("--tab", action="store_true", help="Include TAB as an n-gram")
+    parser.add_argument("--space", action="store_true", help="Include SPACE as an n-gram")
+    parser.add_argument("--cr", action="store_true", help="Include \\n (carriage return) as an n-gram")
 
     parser.add_argument("--speed", default="slow", help="Specify one of fast, medium, slow (default). A faster search is less thorough in its testing of n-grams and will result in poor compression")
 
@@ -191,8 +191,8 @@ def main():
                 singlechars.add(ngram)
             elif len(ngram) > 1:
                 multichars.append(ngram)
-    out.write(f"The initial list of single-char ngrams is:\n  {repr(''.join(sorted(singlechars)))}\n")
-    out.write(f"The initial list of multi-char ngrams is:\n  {multichars}\n")
+    out.write(f"The initial list of single-char n-grams is:\n  {repr(''.join(sorted(singlechars)))}\n")
+    out.write(f"The initial list of multi-char n-grams is:\n  {multichars}\n")
 
     orig_num_ngrams = len(singlechars)
     smiles_iter = open(args.input)
@@ -219,10 +219,8 @@ def main():
     out.write(f"{NUM_SMILES_TO_TEST=}\n{DELTA_TO_TEST=}\n{TEST_AT_LEAST_N_MEASURED=}\n{TEST_AT_LEAST_N=}\n")
     out.write(f"{TEST_AT_LEAST_N_SOMETIMES=}\n{SOMETIMES_INTERVAL=}\n\n")
 
-    # Create holdout set of 10K
-    holdout = []
-    for i in range(10000):
-        holdout.append(next(smiles_iter).split()[0])
+    # Create a holdout set of 10K
+    holdout = [next(smiles_iter).split()[0] for _ in range(HOLDOUT)]
     holdoutlen = length_after_compression(holdout, singlechars, multichars)
     out.write(f"Holdout set: {len(holdout)} SMILES with {holdoutlen} chars\n")
 
@@ -234,7 +232,7 @@ def main():
     while len(multichars) + orig_num_ngrams < 256:
         num_smiles_to_test = int(NUM_SMILES_TO_TEST + len(multichars) * DELTA_TO_TEST)
 
-        # At least every 20 iterations, test at least 1000 ngrams
+        # At least every 20 iterations, test at least 1000 n-grams
         counter += 1
         if counter == SOMETIMES_INTERVAL:
             counter = 0
@@ -243,8 +241,8 @@ def main():
             test_at_least_N_ngrams = TEST_AT_LEAST_N
 
         out.write(f"Testing {num_smiles_to_test} SMILES\n")
-        out.write(f"Going to test at least {test_at_least_N_ngrams} ngrams\n")
-        smiles = [next(smiles_iter).split()[0] for i in range(num_smiles_to_test)]
+        out.write(f"Going to test at least {int(test_at_least_N_ngrams)} n-grams\n")
+        smiles = [next(smiles_iter).split()[0] for _ in range(num_smiles_to_test)]
         origlen = length_after_compression(smiles, singlechars, multichars)
         minlen = origlen
         manager.calculate_ngrams(smiles)
@@ -254,10 +252,10 @@ def main():
             if idx > TEST_AT_LEAST_N_SOMETIMES:
                 counter = 0
             if num_tested >= TEST_AT_LEAST_N_MEASURED and idx > test_at_least_N_ngrams:
-                break # we require min 100 ngrams and min 80 measured ngrams
+                break  # we require a minimum of 100 n-grams and a minimum of 80 measured n-grams
             length = length_after_compression(smiles, singlechars, multichars + [ngram])
-            new_value = (origlen-length) / manager.counts[ngram]
-            out.write(f"  Rank {idx}: {ngram} {val:.1f}{'M' if is_measured else 'E'}->{new_value:.1f} {score:.1f}->{origlen-length} count={manager.counts[ngram]}\n")
+            new_value = (origlen - length) / manager.counts[ngram]
+            out.write(f"  Rank {idx}: {ngram} {val:.1f}{'M' if is_measured else 'E'}->{new_value:.1f} {score:.1f}->{origlen - length} count={manager.counts[ngram]}\n")
             manager.set_value(ngram, new_value)
             if length < minlen:
                 chosen = (ngram, idx)
@@ -266,9 +264,9 @@ def main():
                 num_tested += 1
         first_pass = False
         multichars.append(chosen[0])
-        out.write(f"Ngram {len(multichars)+orig_num_ngrams}: {chosen[0]} Rank {chosen[1]} {origlen}->{minlen}\n")
+        out.write(f"N-gram {len(multichars) + orig_num_ngrams}: {chosen[0]} Rank {chosen[1]} {origlen}->{minlen}\n")
         nholdoutlen = length_after_compression(holdout, singlechars, multichars)
-        out.write(f"Holdout set: {len(holdout)} SMILES with {holdoutlen}->{nholdoutlen} chars ({nholdoutlen/holdoutlen:.1%})\n")
+        out.write(f"Holdout set: {len(holdout)} SMILES with {holdoutlen}->{nholdoutlen} chars ({nholdoutlen / holdoutlen:.1%})\n")
 
     out.write(f"\nTime: {time.time() - t:.1f}\n")
 
@@ -280,7 +278,7 @@ def main():
                 "test_at_least_N_measured": TEST_AT_LEAST_N_MEASURED,
                 "test_at_least_N_sometimes": TEST_AT_LEAST_N_SOMETIMES,
                 "sometimes_interval": SOMETIMES_INTERVAL,
-                "initial_chars": "".join(sorted(singlechars)), # includes --cr, etc.
+                "initial_chars": "".join(sorted(singlechars)),  # includes --cr, etc.
                 "initial_multigrams": args.multigrams}
 
     with open(args.output, "w") as out:
