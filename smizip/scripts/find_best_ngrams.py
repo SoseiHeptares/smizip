@@ -196,25 +196,45 @@ def main():
 
     orig_num_ngrams = len(singlechars)
     smiles_iter = open(args.input)
+    
+    RATIO = 0.1
+    ITERATIONS = 256
+    # Open the input file, calculate the number of lines, and store lines in a list
+    with open(args.input, "r") as smiles_file:
+        NUM_LINES = (1-RATIO)*len(list(line.split()[0] for line in smiles_file))
+    HOLDOUT = int(RATIO * NUM_LINES)
+
 
     if args.speed == "slow":
         NUM_SMILES_TO_TEST, DELTA_TO_TEST = 1000, 45
-        TEST_AT_LEAST_N_MEASURED = 80
-        TEST_AT_LEAST_N = 100
-        TEST_AT_LEAST_N_SOMETIMES = 1000
-        SOMETIMES_INTERVAL = 20
+        TEST_AT_LEAST_N_MEASURED, TEST_AT_LEAST_N = 80, 100
+        TEST_AT_LEAST_N_SOMETIMES, SOMETIMES_INTERVAL = 1000, 20
     elif args.speed == "fast":
         NUM_SMILES_TO_TEST, DELTA_TO_TEST = 100, 4.5
-        TEST_AT_LEAST_N_MEASURED = 25
-        TEST_AT_LEAST_N = 25
-        TEST_AT_LEAST_N_SOMETIMES = 30
-        SOMETIMES_INTERVAL = 250
-    else: # medium
+        TEST_AT_LEAST_N_MEASURED, TEST_AT_LEAST_N = 25, 25
+        TEST_AT_LEAST_N_SOMETIMES, SOMETIMES_INTERVAL = 30, 250
+    elif args.speed == "myslow":
+        FACTOR = 1
+        NUM_SMILES_TO_TEST = max(2,((NUM_LINES / ITERATIONS) / FACTOR) - (ITERATIONS + 128))
+        DELTA_TO_TEST = ((NUM_LINES / ITERATIONS) / FACTOR)  / ITERATIONS
+        TEST_AT_LEAST_N_MEASURED, TEST_AT_LEAST_N = (NUM_SMILES_TO_TEST / 16) / FACTOR, (NUM_SMILES_TO_TEST / 8) / FACTOR
+        TEST_AT_LEAST_N_SOMETIMES, SOMETIMES_INTERVAL = NUM_SMILES_TO_TEST / FACTOR, (TEST_AT_LEAST_N_MEASURED / DELTA_TO_TEST) * 8 * FACTOR
+    elif args.speed == "myfast":
+        FACTOR = 4
+        NUM_SMILES_TO_TEST = max(2,((NUM_LINES / ITERATIONS) / FACTOR) - (ITERATIONS + 128))
+        DELTA_TO_TEST = ((NUM_LINES / ITERATIONS) / FACTOR)  / ITERATIONS
+        TEST_AT_LEAST_N_MEASURED, TEST_AT_LEAST_N = (NUM_SMILES_TO_TEST / 16) / FACTOR, (NUM_SMILES_TO_TEST / 8) / FACTOR
+        TEST_AT_LEAST_N_SOMETIMES, SOMETIMES_INTERVAL = NUM_SMILES_TO_TEST / FACTOR, (TEST_AT_LEAST_N_MEASURED / DELTA_TO_TEST) * 8 * FACTOR
+    elif args.speed == "mymedium":
+        FACTOR = 2
+        NUM_SMILES_TO_TEST = max(2,((NUM_LINES / ITERATIONS) / FACTOR) - (ITERATIONS + 128))
+        DELTA_TO_TEST = ((NUM_LINES / ITERATIONS) / FACTOR)  / ITERATIONS
+        TEST_AT_LEAST_N_MEASURED, TEST_AT_LEAST_N = (NUM_SMILES_TO_TEST / 16) / FACTOR, (NUM_SMILES_TO_TEST / 8) / FACTOR
+        TEST_AT_LEAST_N_SOMETIMES, SOMETIMES_INTERVAL = NUM_SMILES_TO_TEST / FACTOR, (TEST_AT_LEAST_N_MEASURED / DELTA_TO_TEST) * 8 * FACTOR
+    else:  # medium
         NUM_SMILES_TO_TEST, DELTA_TO_TEST = 250, 12
-        TEST_AT_LEAST_N_MEASURED = 40
-        TEST_AT_LEAST_N = 50
-        TEST_AT_LEAST_N_SOMETIMES = 200
-        SOMETIMES_INTERVAL = 50
+        TEST_AT_LEAST_N_MEASURED, TEST_AT_LEAST_N = 40, 50
+        TEST_AT_LEAST_N_SOMETIMES, SOMETIMES_INTERVAL = 200, 50
 
     out.write(f"{NUM_SMILES_TO_TEST=}\n{DELTA_TO_TEST=}\n{TEST_AT_LEAST_N_MEASURED=}\n{TEST_AT_LEAST_N=}\n")
     out.write(f"{TEST_AT_LEAST_N_SOMETIMES=}\n{SOMETIMES_INTERVAL=}\n\n")
@@ -231,7 +251,7 @@ def main():
     first_pass = True
     counter = 0
 
-    while len(multichars) + orig_num_ngrams < 256:
+    while len(multichars) + orig_num_ngrams < ITERATIONS:
         num_smiles_to_test = int(NUM_SMILES_TO_TEST + len(multichars) * DELTA_TO_TEST)
 
         # At least every 20 iterations, test at least 1000 ngrams
